@@ -131,6 +131,72 @@ def calc_profit(df,apply_fee):
     return pd.DataFrame(result)
 
 # 실현 손익 구하기
+def calc_realized_profit(df):
+    result = []
+    total_realized_profit = 0
+    grouped = df.sort_values("거래일").groupby("티커")
+
+    for ticker, group in grouped:
+        position = []
+
+        for _, row in group.iterrows():
+            if row["거래유형"] == "매수":
+                cost = row["금액"]
+                fee = int(cost * FEE_RATE)
+                total_cost = cost + fee
+                position.append([row["거래수량"], cost, total_cost, row["거래일"]])
+
+            elif row["거래유형"] == "매도":
+                sell_qty = row["거래수량"]
+                sell_date = row["거래일"]
+                total_sell = row["금액"] - int(row["금액"] * FEE_RATE)
+
+                realized_cost = 0
+                realized_cost_fee = 0
+                matched_qty = 0
+                matched_buy_date = None
+
+                while sell_qty > 0 and position:
+                    qty, amt, amt_fee, b_date = position[0]
+                    if qty > sell_qty:
+                        portion = sell_qty / qty
+                        realized_cost += amt * portion
+                        realized_cost_fee += amt_fee * portion
+                        position[0][0] -= sell_qty
+                        position[0][1] -= amt * portion
+                        position[0][2] -= amt_fee * portion
+                        matched_qty += sell_qty
+                        matched_buy_date = b_date
+                        sell_qty = 0
+                    else:
+                        realized_cost += amt
+                        realized_cost_fee += amt_fee
+                        matched_qty += qty
+                        matched_buy_date = b_date
+                        sell_qty -= qty
+                        position.pop(0)
+
+                if matched_qty > 0:
+                    buy_unit_price = realized_cost / matched_qty if matched_qty else 0
+                    sell_unit_price = total_sell / matched_qty if matched_qty else 0
+                    profit = total_sell - realized_cost_fee
+                    return_pct = profit / realized_cost_fee *100
+                    total_realized_profit += profit
+
+                    result.append({
+                        '구분1': group["구분1"].iloc[-1],
+                        '구분2': group["구분2"].iloc[-1],
+                        "티커": ticker,
+                        "종목명": group["종목명"].iloc[-1],
+                        "매수일": matched_buy_date.strftime("%Y-%m-%d") if matched_buy_date else None,
+                        "매도일": sell_date.strftime("%Y-%m-%d") if sell_date else None,
+                        "매수단가": f'{int(buy_unit_price):,}',
+                        "매도단가": f'{int(sell_unit_price):,}',
+                        "실현손익": f"{int(profit):,}",
+                        "수익률(%)": return_pct
+                    })
+
+    return pd.DataFrame(result), int(total_realized_profit)
 
 # ---------------------------
 # 초기 페이지 설정
@@ -274,6 +340,8 @@ if page == "수익률 계산":
     total_asset = eval_sum + remain_cash
     total_return = profit_sum / INITIAL_CAPITAL * 100
 
+    realized_profit_df, total_realized_profit = calc_realized_profit(trading_log)
+
     st.markdown("#### 📊 전체 수익 요약")
     col3, col4= st.columns(2)
     with col3:
@@ -285,6 +353,15 @@ if page == "수익률 계산":
         st.metric(label="💸 현금", value=f"{remain_cash:,} 원")
     with col6:
         st.metric(label="💰 총 자산", value=f"{total_asset:,} 원")
+    st.metric(label="💲 실현 손익 총액", value=f"{total_realized_profit:+,} 원")
+
+    st.markdown('---')
+    st.markdown("### 손익 실현 내역")
+    st.dataframe(realized_profit_df,
+                 column_config={
+                    "수익률(%)": st.column_config.NumberColumn(
+                        label="수익률(%)",
+                        format="%.2f%%")})
 
 # ---------------------------
 # Page3: 투자비중 분석

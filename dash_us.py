@@ -19,14 +19,14 @@ EXCHANGE_RATE = 1379.1
 # ---------------------------
 
 # 투자 종목 로드
-spx_data = pd.read_csv('./해외계좌_투자대상_개별종목.csv',encoding='cp949')
+spx_data = pd.read_csv('./data/해외계좌_투자대상_개별종목.csv',encoding='cp949')
 spx_data['티커'] = spx_data['티커'].apply(lambda x: x.split()[0])
 ticker_list = spx_data['티커'].tolist()
 
 # 거래 로그 로드
 if "trading_log" not in st.session_state:
-    if os.path.exists("./trading_log_us.csv"):
-        st.session_state.trading_log = pd.read_csv("./trading_log_us.csv", dtype={"티커": str}, parse_dates=["거래일"])
+    if os.path.exists("./data/trading_log_us.csv"):
+        st.session_state.trading_log = pd.read_csv("./data/trading_log_us.csv", dtype={"티커": str}, parse_dates=["거래일"])
     else:
         st.session_state.trading_log = pd.DataFrame(columns=["티커", "이름", "거래일", "거래유형","구분", "거래수량", "평균단가", "금액"])
 st.session_state.trading_log["거래일"] = pd.to_datetime(st.session_state.trading_log["거래일"], format="mixed")
@@ -207,7 +207,7 @@ if page == "매수/매도 정보 입력":
                                                 .groupby('티커')
                                                 .apply(lambda x: x.sort_values(by='거래일'))
                                                 .reset_index(drop=True))
-                st.session_state.trading_log.to_csv("./trading_log_us.csv", index=False)
+                st.session_state.trading_log.to_csv("./data/trading_log_us.csv", index=False)
                 st.success("✅ 거래 로그가 업데이트되고 저장되었습니다.")
 
         # except Exception as e:
@@ -235,7 +235,7 @@ if page == "매수/매도 정보 입력":
             # 삭제할 행을 제외한 데이터로 갱신
             updated_log = edited[~edited["삭제"]].drop(columns=["삭제"])
             st.session_state.trading_log = updated_log
-            st.session_state.trading_log.to_csv("./trading_log_us.csv", index=False)
+            st.session_state.trading_log.to_csv("./data/trading_log_us.csv", index=False)
             st.success(f"🗑️ {len(to_delete)}건의 거래가 삭제되었습니다.")
         else:
             st.warning("❗ 삭제할 거래를 선택하지 않았습니다.")

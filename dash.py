@@ -576,7 +576,7 @@ if page == "해외계좌 분석":
     with col1:
         apply_fee_US = st.checkbox("수수료 적용 (0.2%)", value=True)
     with col2:
-        apply_KRW = st.checkbox(f"원화 적용({EXCHANGE_RATE}원/$)", value=True)
+        apply_KRW = st.checkbox(f"원화 적용({EXCHANGE_RATE}원/$)", value=False)
     with col3:
         st.markdown(f"**기준일:** {datetime.today().strftime('%Y-%m-%d')}")
 
@@ -802,6 +802,7 @@ if page == "해외계좌 분석":
 # ---------------------------
 if page == "국내계좌 매수/매도 정보 입력":
     st.subheader("국내계좌 매수/매도 정보 입력")
+    st.markdown("로컬에서 입력 후 Push")
 
     # 티커 또는 종목명 검색
     ticker_input = st.text_input("티커 입력")
@@ -909,6 +910,7 @@ if page == "국내계좌 매수/매도 정보 입력":
 # ---------------------------
 if page == "해외계좌 매수/매도 정보 입력":
     st.subheader("해외계좌 매수/매도 정보 입력")
+    st.markdown("로컬에서 입력 후 Push")
 
     # 티커 또는 이름 검색
     ticker_input = st.text_input("티커 입력")

@@ -89,9 +89,9 @@ def show_us_analysis():
         else:
             st.metric(label="💰 총 자산", value=f"${total_asset:,.2f}")
     if apply_KRW:
-        st.metric(label="💲 실현 손익 총액", value=f"${total_realized_profit*EXCHANGE_RATE:+,}")
+        st.metric(label="💲 실현 손익 총액", value=f"{total_realized_profit*EXCHANGE_RATE:+,} 원")
     else:
-        st.metric(label="💲 실현 손익 총액", value=f"{total_realized_profit:+,} 원")
+        st.metric(label="💲 실현 손익 총액", value=f"${total_realized_profit:+,}")
     
     # ---------------------------
     ## 목표수익률 및 지표 확인

@@ -84,7 +84,7 @@ def show_kr_analysis():
     ## 목표 수익률 및 기술적 지표 분석
     st.markdown("---")
     st.markdown("### 📈 목표 수익률 및 기술적 지표 분석")
-    target_df = profit_df[['구분1','구분2','티커','종목명','매수일','평가손익','투자수익률(%)']]
+    target_df = profit_df[['구분1','구분2','티커','종목명','매수일','평가손익','투자수익률(%)']].copy()
 
     # 종목별 계산
     tech_indicator = []
@@ -221,11 +221,11 @@ def show_kr_analysis():
     total_asset = remaining_cash + total_eval
 
     # 구분1
-    cat1_ratio_df = profit_df[['구분1','현재평가금액','평균단가','보유수량']]
+    cat1_ratio_df = profit_df[['구분1','현재평가금액','평균단가','보유수량']].copy()
     cat1_ratio_df['평균단가']  = cat1_ratio_df['평균단가'].str.replace(",", "").astype(int) 
     cat1_ratio_df['현재평가금액'] =  cat1_ratio_df['현재평가금액'].str.replace(",", "").astype(int)
 
-    cat1_ratio_df['기초평가금액'] = (cat1_ratio_df['평균단가']* cat1_ratio_df['보유수량'])
+    cat1_ratio_df['기초평가금액'] = (cat1_ratio_df['평균단가'] * cat1_ratio_df['보유수량'])
     cat1_ratio_df = cat1_ratio_df.drop(['평균단가','보유수량'],axis=1)
 
     cat1_ratio_df = cat1_ratio_df.groupby('구분1').sum().reset_index()
@@ -237,11 +237,11 @@ def show_kr_analysis():
     cat1_ratio_df = cat1_ratio_df.rename(columns = {'구분1':"구분"})
 
     # 구분2
-    cat2_ratio_df =profit_df[['구분2','현재평가금액','평균단가','보유수량']]
+    cat2_ratio_df =profit_df[['구분2','현재평가금액','평균단가','보유수량']].copy()
     cat2_ratio_df['평균단가']  = cat2_ratio_df['평균단가'].str.replace(",", "").astype(int)
     cat2_ratio_df['현재평가금액'] =  cat2_ratio_df['현재평가금액'].str.replace(",", "").astype(int)
 
-    cat2_ratio_df['기초평가금액'] = (cat2_ratio_df['평균단가'].str.replace(",", "").astype(int) * cat2_ratio_df['보유수량'])
+    cat2_ratio_df['기초평가금액'] = (cat2_ratio_df['평균단가'] * cat2_ratio_df['보유수량'])
     cat2_ratio_df = cat2_ratio_df.drop(['평균단가','보유수량'],axis=1)
 
     cat2_ratio_df = cat2_ratio_df.groupby('구분2').sum().reset_index()

@@ -146,10 +146,10 @@ def calc_profit_us(trading_log, price_dict, apply_fee):
             "매수일": buy_date.strftime("%Y-%m-%d") if buy_date else None,
             "평균단가": f'{int(average_price):,}',
             "현재가": f'{int(end_price):,}',
-            "평가손익": f"{int(profit):,}",
+            "평가손익": f"{round(profit,2):,}",
             "투자수익률(%)": round(total_return * 100, 2),
             "보유수량": int(remaining_quantity),
-            "현재평가금액": f"{int(eval_value):,}"
+            "현재평가금액": f"{round(eval_value,2):,}"
         })
 
     return pd.DataFrame(result)
@@ -216,9 +216,9 @@ def calc_realized_profit(trading_log, US=False):
                         "이름": group["이름"].iloc[-1],
                         "매수일": matched_buy_date.strftime("%Y-%m-%d") if matched_buy_date else None,
                         "매도일": sell_date.strftime("%Y-%m-%d") if sell_date else None,
-                        "매수단가": f'{int(buy_unit_price):,}',
-                        "매도단가": f'{int(sell_unit_price):,}',
-                        "실현손익": f"{int(profit):,}",
+                        "매수단가": f'{round(buy_unit_price,2):,}',
+                        "매도단가": f'{round(sell_unit_price,2):,}',
+                        "실현손익": f"{round(profit,2):,}",
                         "수익률(%)": return_pct
                         })
                     else:

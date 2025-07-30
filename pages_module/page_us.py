@@ -45,7 +45,24 @@ def show_us_analysis():
     result_df["현재평가금액_int"] = result_df["현재평가금액"].str.replace(",", "").astype(int)
     result_df = result_df.sort_values(by=['구분','현재평가금액_int'],ascending=False, axis=0).reset_index(drop=True)
     result_df = result_df.drop('현재평가금액_int',axis=1)
-    st.dataframe(result_df)
+    st.dataframe(result_df,
+                column_config={
+                    "평균단가": st.column_config.NumberColumn(
+                        label="평균단가",
+                        format="%.2f%%"),
+                    "현재가": st.column_config.NumberColumn(
+                        label="현재가",
+                        format="%.2f%%"),
+                    "손절가(120%)": st.column_config.NumberColumn(
+                        label="손절가(120%)",
+                        format="%.2f%%"),
+                    "목표수익률(80%)": st.column_config.NumberColumn(
+                        label="목표수익률(80%)",
+                        format="%.2f%%"),
+                    "목표수익률(120%)": st.column_config.NumberColumn(
+                        label="목표수익률(120%)",
+                        format="%.2f%%")
+                    },hide_index=True)
 
     # ---------------------------
     # 평가손익 총합 및 현재 자산 계산

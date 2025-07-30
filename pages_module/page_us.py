@@ -42,32 +42,19 @@ def show_us_analysis():
 
     # 평가손익 기준 정렬
     result_df = profit_df.copy()
-    result_df["현재평가금액_int"] = result_df["현재평가금액"].str.replace(",", "").astype(int)
-    result_df = result_df.sort_values(by=['구분','현재평가금액_int'],ascending=False, axis=0).reset_index(drop=True)
-    result_df = result_df.drop('현재평가금액_int',axis=1)
+    result_df["현재평가금액_float"] = result_df["현재평가금액"].str.replace(",", "").astype(float)
+    result_df = result_df.sort_values(by=['구분','현재평가금액_float'],ascending=False, axis=0).reset_index(drop=True)
+    result_df = result_df.drop('현재평가금액_float',axis=1)
     st.dataframe(result_df,
-                column_config={
-                    "평균단가": st.column_config.NumberColumn(
-                        label="평균단가",
-                        format="%.2f%%"),
-                    "현재가": st.column_config.NumberColumn(
-                        label="현재가",
-                        format="%.2f%%"),
-                    "손절가(120%)": st.column_config.NumberColumn(
-                        label="손절가(120%)",
-                        format="%.2f%%"),
-                    "목표수익률(80%)": st.column_config.NumberColumn(
-                        label="목표수익률(80%)",
-                        format="%.2f%%"),
-                    "목표수익률(120%)": st.column_config.NumberColumn(
-                        label="목표수익률(120%)",
-                        format="%.2f%%")
-                    },hide_index=True)
+                 column_config={
+                    "수익률(%)": st.column_config.NumberColumn(
+                        label="수익률(%)",
+                        format="%.2f%%")})
 
     # ---------------------------
     # 평가손익 총합 및 현재 자산 계산
-    profit_sum = result_df["평가손익"].str.replace(",", "").astype(int).sum()
-    eval_sum = result_df["현재평가금액"].str.replace(",", "").astype(int).sum()
+    profit_sum = result_df["평가손익"].str.replace(",", "").astype(float).sum()
+    eval_sum = result_df["현재평가금액"].str.replace(",", "").astype(float).sum()
 
     remain_cash = get_remaining_cash(trading_log, US=True)
     total_asset = eval_sum + remain_cash
@@ -227,12 +214,12 @@ def show_us_analysis():
                 )
     
     # 지수구성 포트폴리오 평가
-    index_eval_begin = (profit_df.loc[profit_df['구분']=='지수구성']['평균단가'].str.replace(",", "").astype(int) * profit_df.loc[profit_df['구분']=='지수구성']['보유수량']).sum()
-    index_eval_end =  profit_df.loc[profit_df['구분']=='지수구성']['현재평가금액'].str.replace(",", "").astype(int).sum()
+    index_eval_begin = (profit_df.loc[profit_df['구분']=='지수구성']['평균단가'].str.replace(",", "").astype(float) * profit_df.loc[profit_df['구분']=='지수구성']['보유수량']).sum()
+    index_eval_end =  profit_df.loc[profit_df['구분']=='지수구성']['현재평가금액'].str.replace(",", "").astype(float).sum()
     index_profit = (index_eval_end - index_eval_begin)/index_eval_begin*100
     col9,col10 = st.columns(2)
     with col9:
-        st.metric(label="💹 지수구성 평가손익", value=f"{index_eval_end - index_eval_begin:+,} $")
+        st.metric(label="💹 지수구성 평가손익", value=f"{index_eval_end - index_eval_begin:+,.2f} $")
     with col10:
         st.metric(label="📈 지수구성 수익률", value=f"{index_profit:.2f} %")
 
@@ -247,10 +234,10 @@ def show_us_analysis():
     ratio_df = profit_df[['구분','티커','이름','현재평가금액']].copy()
     index_df = ratio_df.loc[ratio_df['구분']=='지수구성']
     index_df = index_df.drop('구분',axis=1)
-    index_df['현재평가금액'] = index_df['현재평가금액'].str.replace(",", "").astype(int)
+    index_df['현재평가금액'] = index_df['현재평가금액'].str.replace(",", "").astype(float)
 
     remaining_cash= get_remaining_cash(trading_log, US=True)
-    total_eval = ratio_df['현재평가금액'].str.replace(",", "").astype(int).sum()
+    total_eval = ratio_df['현재평가금액'].str.replace(",", "").astype(float).sum()
     total_asset = remaining_cash + total_eval
     index_df['투자비중'] = index_df['현재평가금액'] / total_asset *100
     if apply_KRW:
@@ -282,7 +269,7 @@ def show_us_analysis():
     # 개별종목
     Individ_df =  ratio_df.loc[ratio_df['구분']=='개별종목']
     Individ_df = Individ_df.drop('구분',axis=1)
-    Individ_df['현재평가금액'] = Individ_df['현재평가금액'].str.replace(",", "").astype(int)
+    Individ_df['현재평가금액'] = Individ_df['현재평가금액'].str.replace(",", "").astype(float)
     Individ_df['투자비중'] = Individ_df['현재평가금액'] / total_asset *100
     if apply_KRW:
         Individ_df['현재평가금액'] = Individ_df['현재평가금액'].apply(lambda x: f'{x*EXCHANGE_RATE:,.0f}원')

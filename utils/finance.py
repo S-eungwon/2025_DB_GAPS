@@ -144,12 +144,12 @@ def calc_profit_us(trading_log, price_dict, apply_fee):
             "티커": ticker,
             "이름": group["이름"].iloc[-1],
             "매수일": buy_date.strftime("%Y-%m-%d") if buy_date else None,
-            "평균단가": f'{int(average_price):,}',
-            "현재가": f'{int(end_price):,}',
-            "평가손익": f"{round(profit,2):,}",
+            "평균단가": f'{average_price:,.2f}',
+            "현재가": f'{end_price:,.2f}',
+            "평가손익": f"{profit:,.2f}",
             "투자수익률(%)": round(total_return * 100, 2),
             "보유수량": int(remaining_quantity),
-            "현재평가금액": f"{round(eval_value,2):,}"
+            "현재평가금액": f"{eval_value:,.2f}"
         })
 
     return pd.DataFrame(result)

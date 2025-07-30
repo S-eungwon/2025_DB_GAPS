@@ -1,5 +1,5 @@
 import streamlit as st
-from data_loader import load_trading_log
+from utils.data_loader import load_trading_log
 from pages_module.page_kr import show_kr_analysis, show_kr_input
 from pages_module.page_us import show_us_analysis, show_us_input
 

@@ -6,9 +6,9 @@ from ta.momentum import RSIIndicator
 from ta.trend import ADXIndicator
 from ta.volatility import BollingerBands
 
-from finance import calc_profit_us, get_remaining_cash, calc_realized_profit
-from data_loader import get_price, load_spx_data
-from config import INITIAL_CAPITAL_US, EXCHANGE_RATE
+from utils.finance import calc_profit_us, get_remaining_cash, calc_realized_profit
+from utils.data_loader import get_price, load_spx_data
+from utils.config import INITIAL_CAPITAL_US, EXCHANGE_RATE
 
 def show_us_analysis():
     # ---------------------------

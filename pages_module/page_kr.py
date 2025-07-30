@@ -6,9 +6,9 @@ from ta.momentum import RSIIndicator
 from ta.trend import ADXIndicator
 from ta.volatility import BollingerBands
 
-from finance import calc_profit_kr, get_remaining_cash, calc_realized_profit
-from data_loader import get_price, load_etf_data
-from config import INITIAL_CAPITAL_KR
+from utils.finance import calc_profit_kr, get_remaining_cash, calc_realized_profit
+from utils.data_loader import get_price, load_etf_data
+from utils.config import INITIAL_CAPITAL_KR
 
 def show_kr_analysis():
     # ---------------------------
@@ -222,24 +222,32 @@ def show_kr_analysis():
 
     # 구분1
     cat1_ratio_df = profit_df[['구분1','현재평가금액','평균단가','보유수량']]
-    cat1_ratio_df.loc[:,'기초평가금액'] = (cat1_ratio_df['평균단가'].str.replace(",", "").astype(int) * cat1_ratio_df['보유수량'])
-    cat1_ratio_df = cat1_ratio_df.drop(['평균단가','보유수량'],axis=1)
+    cat1_ratio_df['평균단가']  = cat1_ratio_df['평균단가'].str.replace(",", "").astype(int) 
     cat1_ratio_df['현재평가금액'] =  cat1_ratio_df['현재평가금액'].str.replace(",", "").astype(int)
+
+    cat1_ratio_df['기초평가금액'] = (cat1_ratio_df['평균단가']* cat1_ratio_df['보유수량'])
+    cat1_ratio_df = cat1_ratio_df.drop(['평균단가','보유수량'],axis=1)
+
     cat1_ratio_df = cat1_ratio_df.groupby('구분1').sum().reset_index()
     cat1_ratio_df['수익률'] = (cat1_ratio_df['현재평가금액'] - cat1_ratio_df['기초평가금액']) /cat1_ratio_df['기초평가금액'] *100
     cat1_ratio_df['투자비중'] = cat1_ratio_df['현재평가금액'] / total_asset *100
+
     cat1_ratio_df['현재평가금액'] = cat1_ratio_df['현재평가금액'].apply(lambda x: f'{x:,}')
     cat1_ratio_df['기초평가금액'] = cat1_ratio_df['기초평가금액'].apply(lambda x: f'{x:,}')
     cat1_ratio_df = cat1_ratio_df.rename(columns = {'구분1':"구분"})
 
     # 구분2
     cat2_ratio_df =profit_df[['구분2','현재평가금액','평균단가','보유수량']]
-    cat2_ratio_df.loc[:,'기초평가금액'] = (cat2_ratio_df['평균단가'].str.replace(",", "").astype(int) * cat2_ratio_df['보유수량'])
-    cat2_ratio_df = cat2_ratio_df.drop(['평균단가','보유수량'],axis=1)
+    cat2_ratio_df['평균단가']  = cat2_ratio_df['평균단가'].str.replace(",", "").astype(int)
     cat2_ratio_df['현재평가금액'] =  cat2_ratio_df['현재평가금액'].str.replace(",", "").astype(int)
+
+    cat2_ratio_df['기초평가금액'] = (cat2_ratio_df['평균단가'].str.replace(",", "").astype(int) * cat2_ratio_df['보유수량'])
+    cat2_ratio_df = cat2_ratio_df.drop(['평균단가','보유수량'],axis=1)
+
     cat2_ratio_df = cat2_ratio_df.groupby('구분2').sum().reset_index()
     cat2_ratio_df['수익률'] = (cat2_ratio_df['현재평가금액'] - cat2_ratio_df['기초평가금액']) /cat2_ratio_df['기초평가금액'] *100
     cat2_ratio_df['투자비중'] = cat2_ratio_df['현재평가금액'] / total_asset *100
+    
     cat2_ratio_df['현재평가금액'] = cat2_ratio_df['현재평가금액'].apply(lambda x: f'{x:,}')
     cat2_ratio_df['기초평가금액'] = cat2_ratio_df['기초평가금액'].apply(lambda x: f'{x:,}')
     cat2_ratio_df = cat2_ratio_df.rename(columns = {'구분2':"구분"})

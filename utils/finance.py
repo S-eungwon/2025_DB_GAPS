@@ -1,5 +1,5 @@
 import pandas as pd
-from config import INITIAL_CAPITAL_KR, INITIAL_CAPITAL_US, FEE_RATE_KR, FEE_RATE_US
+from utils.config import INITIAL_CAPITAL_KR, INITIAL_CAPITAL_US, FEE_RATE_KR, FEE_RATE_US
 
 def get_remaining_cash(trading_log, US=False):
     cash = INITIAL_CAPITAL_KR

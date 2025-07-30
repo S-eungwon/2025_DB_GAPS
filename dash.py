@@ -344,8 +344,8 @@ if page == "국내계좌 분석":
         apply_fee_KR = st.checkbox("수수료 적용 (0.1%)", value=True)
     with col2:
         st.markdown(f"**기준일:** {end_date}")
-
-    result_df = calc_profit(trading_log, apply_fee_KR, US=False)
+    profit_df = calc_profit(trading_log, apply_fee_KR, US=False)
+    result_df = profit_df.copy()
     result_df["평가손익_int"] = result_df["평가손익"].str.replace(",", "").astype(int)
     result_df = result_df.sort_values(by='평가손익_int',ascending=False, axis=0).reset_index(drop=True)
     result_df = result_df.drop('평가손익_int',axis=1)
@@ -389,11 +389,10 @@ if page == "국내계좌 분석":
     col7, col8 = st.columns([5, 1])  
     with col8:
         st.markdown(f"**기준일:** {end_date}")
-    profit_df = calc_profit(trading_log, apply_fee_KR, US=False)[['구분1','구분2','티커','종목명','매수일','평가손익','투자수익률(%)']]
-
+    target_df = profit_df[['구분1','구분2','티커','종목명','매수일','평가손익','투자수익률(%)']]
 
     tech_indicator = []
-    for ticker in profit_df['티커']:
+    for ticker in target_df['티커']:
         df = price_dict_KR[ticker].copy()
         if df.empty:
             continue
@@ -401,8 +400,8 @@ if page == "국내계좌 분석":
         df['Return'] = df['Close'].pct_change()
         latest_price = df['Close'].iloc[-1]
 
-        buy_date = profit_df.loc[profit_df['티커']==ticker]['매수일'].values[0]
-        category = profit_df.loc[profit_df['티커']==ticker]['구분2'].values[0]
+        buy_date = target_df.loc[target_df['티커']==ticker]['매수일'].values[0]
+        category = target_df.loc[target_df['티커']==ticker]['구분2'].values[0]
 
         recent_window = df.loc[df.index <= buy_date]['Return'].dropna().iloc[-120:]
         avg_r_120 = recent_window.mean()
@@ -451,7 +450,7 @@ if page == "국내계좌 분석":
             'ADX신호': adx_signal
         })
     tech_indicator = pd.DataFrame(tech_indicator)
-    target_df = pd.merge(profit_df, tech_indicator, on='티커' )
+    target_df = pd.merge(target_df, tech_indicator, on='티커' )
     target_df = target_df.sort_values('투자수익률(%)',axis=0, ascending=False).reset_index(drop=True)
     target_df = target_df.drop(['구분1','구분2'],axis=1)
     def highlight_row(row):
@@ -513,18 +512,41 @@ if page == "국내계좌 분석":
     ## 투자비중 분석
     st.markdown("---")
     st.markdown("## 투자비중 분석")
-    ratio_df = calc_profit(trading_log, apply_fee=True, US=False)[['구분2','현재평가금액']]
-    ratio_df['현재평가금액'] =  ratio_df['현재평가금액'].str.replace(",", "").astype(int)
-    ratio_df = ratio_df.groupby('구분2').sum().reset_index()
-
     remaining_cash= get_remaining_cash(trading_log, US=False)
-    total_eval = ratio_df['현재평가금액'].sum()
+    total_eval = profit_df['현재평가금액'].str.replace(",", "").astype(int).sum()
     total_asset = remaining_cash + total_eval
-    ratio_df['투자비중'] = ratio_df['현재평가금액'] / total_asset *100
-    ratio_df['현재평가금액'] = ratio_df['현재평가금액'].apply(lambda x: f'{x:,}')
+
+    # 구분1
+    cat1_ratio_df = profit_df[['구분1','현재평가금액','평균단가','보유수량']]
+    cat1_ratio_df['기초평가금액'] = (cat1_ratio_df['평균단가'].str.replace(",", "").astype(int) * cat1_ratio_df['보유수량'])
+    cat1_ratio_df = cat1_ratio_df.drop(['평균단가','보유수량'],axis=1)
+    cat1_ratio_df['현재평가금액'] =  cat1_ratio_df['현재평가금액'].str.replace(",", "").astype(int)
+    cat1_ratio_df = cat1_ratio_df.groupby('구분1').sum().reset_index()
+    cat1_ratio_df['수익률'] = (cat1_ratio_df['현재평가금액'] - cat1_ratio_df['기초평가금액']) /cat1_ratio_df['기초평가금액'] *100
+    cat1_ratio_df['투자비중'] = cat1_ratio_df['현재평가금액'] / total_asset *100
+    cat1_ratio_df['현재평가금액'] = cat1_ratio_df['현재평가금액'].apply(lambda x: f'{x:,}')
+    cat1_ratio_df['기초평가금액'] = cat1_ratio_df['기초평가금액'].apply(lambda x: f'{x:,}')
+    cat1_ratio_df = cat1_ratio_df.rename(columns = {'구분1':"구분"})
+
+    # 구분2
+    cat2_ratio_df =profit_df[['구분2','현재평가금액','평균단가','보유수량']]
+    cat2_ratio_df['기초평가금액'] = (cat2_ratio_df['평균단가'].str.replace(",", "").astype(int) * cat2_ratio_df['보유수량'])
+    cat2_ratio_df = cat2_ratio_df.drop(['평균단가','보유수량'],axis=1)
+    cat2_ratio_df['현재평가금액'] =  cat2_ratio_df['현재평가금액'].str.replace(",", "").astype(int)
+    cat2_ratio_df = cat2_ratio_df.groupby('구분2').sum().reset_index()
+    cat2_ratio_df['수익률'] = (cat2_ratio_df['현재평가금액'] - cat2_ratio_df['기초평가금액']) /cat2_ratio_df['기초평가금액'] *100
+    cat2_ratio_df['투자비중'] = cat2_ratio_df['현재평가금액'] / total_asset *100
+    cat2_ratio_df['현재평가금액'] = cat2_ratio_df['현재평가금액'].apply(lambda x: f'{x:,}')
+    cat2_ratio_df['기초평가금액'] = cat2_ratio_df['기초평가금액'].apply(lambda x: f'{x:,}')
+    cat2_ratio_df = cat2_ratio_df.rename(columns = {'구분2':"구분"})
+
+    # 합치기
+    ratio_df = pd.concat([cat1_ratio_df,cat2_ratio_df],axis=0)
 
     # 상한 설정
     limit_dict = {
+    '안전':100,
+    '위험':70,
     'FX 및 원자재': 20,
     '국내주식_섹터': 15,
     '국내주식_지수': 30,
@@ -536,7 +558,7 @@ if page == "국내계좌 분석":
     '해외채권_종합': 50,
     '해외채권_회사채': 30
     }
-    ratio_df["상한"] = ratio_df["구분2"].map(limit_dict).fillna("-")
+    ratio_df["상한"] = ratio_df["구분"].map(limit_dict).fillna("-")
     ratio_df = ratio_df.sort_values('상한').reset_index(drop=True)
 
 
@@ -556,6 +578,9 @@ if page == "국내계좌 분석":
     
     st.dataframe(ratio_df.style.apply(highlight_exceed_limit, axis=1),
                 column_config={
+                    "수익률": st.column_config.NumberColumn(
+                        label="수익률",
+                        format="%.2f%%"),
                     "투자비중": st.column_config.NumberColumn(
                         label="투자비중",
                         format="%.2f%%"),
@@ -633,11 +658,12 @@ if page == "해외계좌 분석":
     ## 목표수익률 및 지표 확인
     st.markdown('---')
     st.markdown("### 📈 목표 수익률 및 기술적 지표 분석")
-    profit_df = calc_profit(trading_log, apply_fee_US, US=True)[['구분','티커','이름','매수일','평가손익','투자수익률(%)']]
-    profit_df = profit_df.loc[profit_df["구분"]=='개별종목']
+    profit_df = calc_profit(trading_log, apply_fee_US, US=True)
+    target_df = profit_df[['구분','티커','이름','매수일','평가손익','투자수익률(%)']]
+    target_df = target_df.loc[target_df["구분"]=='개별종목']
 
     tech_indicator = []
-    for ticker in profit_df['티커']:
+    for ticker in target_df['티커']:
         df = price_dict_US[ticker].copy()
         if df.empty:
             continue
@@ -645,7 +671,7 @@ if page == "해외계좌 분석":
         df['Return'] = df['Close'].pct_change()
         latest_price = df['Close'].iloc[-1]
 
-        buy_date = profit_df.loc[profit_df['티커']==ticker]['매수일'].values[0]
+        buy_date = target_df.loc[target_df['티커']==ticker]['매수일'].values[0]
 
         recent_window = df.loc[df.index <= buy_date]['Return'].dropna().iloc[-120:]
         avg_r_120 = recent_window.mean()
@@ -681,7 +707,7 @@ if page == "해외계좌 분석":
             'ADX신호': adx_signal
         })
     tech_indicator = pd.DataFrame(tech_indicator)
-    target_df = pd.merge(profit_df, tech_indicator, on='티커' )
+    target_df = pd.merge(target_df, tech_indicator, on='티커' )
     target_df = target_df.sort_values('투자수익률(%)',axis=0, ascending=False).reset_index(drop=True)
     target_df = target_df.drop(['구분'],axis=1)
     def highlight_row(row):
@@ -738,6 +764,16 @@ if page == "해외계좌 분석":
                         format="%.2f%%")
                     },hide_index=True
                 )
+    index_eval_begin = (profit_df.loc[profit_df['구분']=='지수구성']['평균단가'].str.replace(",", "").astype(int) * profit_df.loc[profit_df['구분']=='지수구성']['보유수량']).sum()
+    index_eval_end =  profit_df.loc[profit_df['구분']=='지수구성']['현재평가금액'].str.replace(",", "").astype(int).sum()
+    index_profit = (index_eval_end - index_eval_begin)/index_eval_begin*100
+    col9,col10 = st.columns(2)
+    with col9:
+        st.metric(label="💹 지수구성 평가손익", value=f"{index_eval_end - index_eval_begin:+,} $")
+    with col10:
+        st.metric(label="📈 지수구성 수익률", value=f"{index_profit:.2f} %")
+
+
     
     # ---------------------------
     ## 투자비중 분석
@@ -780,6 +816,7 @@ if page == "해외계좌 분석":
                         label="투자비중",
                         format="%.2f%%")})
     
+    # 개별종목
     Individ_df =  ratio_df.loc[ratio_df['구분']=='개별종목']
     Individ_df = Individ_df.drop('구분',axis=1)
     Individ_df['현재평가금액'] = Individ_df['현재평가금액'].str.replace(",", "").astype(int)
